@@ -1,10 +1,54 @@
+tiles.setTilemap(tilemap`level1`)
+let follower = sprites.create(img`
+    . . . . . . . . . . b 5 b . . . 
+    . . . . . . . . . b 5 b . . . . 
+    . . . . . . b b b b b b . . . . 
+    . . . . . b b 5 5 5 5 5 b . . . 
+    . . . . b b 5 d 1 f 5 5 d f . . 
+    . . . . b 5 5 1 f f 5 d 4 c . . 
+    . . . . b 5 5 d f b d d 4 4 . . 
+    . b b b d 5 5 5 5 5 4 4 4 4 4 b 
+    b d d d b b d 5 5 4 4 4 4 4 b . 
+    b b d 5 5 5 b 5 5 5 5 5 5 b . . 
+    c d c 5 5 5 5 d 5 5 5 5 5 5 b . 
+    c b d c d 5 5 b 5 5 5 5 5 5 b . 
+    . c d d c c b d 5 5 5 5 5 d b . 
+    . . c b d d d d d 5 5 5 b b . . 
+    . . . c c c c c c c c b b . . . 
+    . . . . . . . . . . . . . . . . 
+    `, SpriteKind.Player)
+let target = sprites.create(img`
+    .....ffff...............
+    ...fff22fff.............
+    ..fff2222fff............
+    .fffeeeeeefff...........
+    .ffe222222eef...........
+    .fe2ffffff2ef...........
+    .ffffeeeeffff...........
+    ffefbf44fbfeff..........
+    fee41fddf14eef..........
+    .ffffdddddeef...........
+    fddddf444eef............
+    fbbbbf2222f4e...........
+    fbbbbf2222fd4...........
+    .fccf45544f44...........
+    ..ffffffff..............
+    ....ff..ff..............
+    `, SpriteKind.Player)
+tiles.placeOnTile(follower, tiles.getTileLocation(5, 1))
+tiles.placeOnTile(target, tiles.getTileLocation(0, 2))
+sprites.spriteTrackTargetSprite(follower, target, 50)
 namespace sprites {
+
+    const maxGridSize = 256;
+
+
 
     //% block="set $sprite to track $targetSprite at speed $speed"
     //% group="Pathfinding"
     //% weight=100
     export function spriteTrackTargetSprite(sprite: Sprite, targetSprite: Sprite, speed: number) {
-        
+
         // do 250 for now, if needed we can generify
         game.onUpdateInterval(250, () => {
             const obstacleMap = createObstacleMap();
@@ -19,16 +63,16 @@ namespace sprites {
             const targetSpriteX = targetSprite.left >> 4;
             const targetSpriteY = targetSprite.top >> 4;
 
-            if (followSpriteTileX === targetSpriteX 
+            if (followSpriteTileX === targetSpriteX
                 && followSpriteTileY === targetSpriteY)
                 return
 
             // let's a* this 💩
             const path = aStar(
-                createGrid(obstacleMap), 
-                { 
-                    x: followSpriteTileX, 
-                    y: followSpriteTileY 
+                createGrid(obstacleMap),
+                {
+                    x: followSpriteTileX,
+                    y: followSpriteTileY
                 },
                 {
                     x: targetSpriteX,
@@ -58,7 +102,7 @@ namespace sprites {
                 console.log(nextTileString)
             }
 
-        })        
+        })
     }
 
     function createObstacleMap() {
@@ -70,7 +114,7 @@ namespace sprites {
         const obstacleArray: boolean[][] = []
         for (let i = 0; i < tileWidthCount; i++) {
             let innerObstacleArray = []
-            for (let j = 0; j < tileHeightCount; j++) 
+            for (let j = 0; j < tileHeightCount; j++)
                 innerObstacleArray.push(tilemap.isObstacle(i, j))
             obstacleArray.push(innerObstacleArray)
         }
@@ -125,7 +169,7 @@ namespace sprites {
 
         while (openList.length > 0) {
             let lowIndex = 0;
-            for (let i = 1; i < openList.length; i++) 
+            for (let i = 1; i < openList.length; i++)
                 if (openList[i].f < openList[lowIndex].f)
                     lowIndex = i;
             const currentNode = openList[lowIndex]
@@ -139,7 +183,7 @@ namespace sprites {
                     current = current.parent
                 }
                 returnList.reverse()
-                return returnList; 
+                return returnList;
             }
 
             // move this element to closed
@@ -183,7 +227,7 @@ namespace sprites {
         const y = element.y;
 
         if (grid[x - 1] && grid[x - 1][y])
-            list.push(grid[x-1][y])
+            list.push(grid[x - 1][y])
         if (grid[x + 1] && grid[x + 1][y])
             list.push(grid[x + 1][y])
         if (grid[x] && grid[x][y - 1])
