@@ -17,9 +17,6 @@ namespace sprites {
             const followSpriteTileX = sprite.left >> 4;
             const followSpriteTileY = sprite.top >> 4;
 
-            console.log(`follow sprite x: ${followSpriteTileX}`)
-            console.log(`follow sprite y: ${followSpriteTileY}`)
-
             const targetSpriteX = targetSprite.left >> 4;
             const targetSpriteY = targetSprite.top >> 4;
 
@@ -41,7 +38,6 @@ namespace sprites {
 
             // no path to target, freeze follower and return
             if (path.length == 0) {
-                console.log('no path found to target')
                 sprite.vx = 0;
                 sprite.vy = 0;
                 sprite.ax = 0;
@@ -54,14 +50,6 @@ namespace sprites {
             const nextTile = path[0];
             sprite.vx = (nextTile.x - followSpriteTileX) * speed;
             sprite.vy = (nextTile.y - followSpriteTileY) * speed;
-
-            // console.log(sprite)
-
-            if (path.length > 0) {
-                const nextTileString = `travel to ${path[0].x}, ${path[0].y}`
-                console.log(nextTileString)
-            }
-
         })
     }
 
