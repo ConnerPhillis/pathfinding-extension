@@ -15,21 +15,19 @@ namespace sprites {
         // do 250 for now, if needed we can generify
         game.onUpdateInterval(100, () => {
             const obstacleMap = createObstacleMap();
-
-            /*
-            * this is going to get difficult - so we have to figure out if 
-            * the sprite that we currently have chasing is going to slightly
-            * collide with a wall that may or may not be rendered 
-            * 
-            * we have to position the target sprite at the exact center of a tile
-            * to make sure that we're good.. that is going to be... difficult to
-            * say the least.
-            * 
-            * Formula should be pretty easy
-            * (left + right) / 2 = center x
-            * (top + bottom) / 2 = center y
-            * ((center x) >> 4) + 8 = midpoint of a tile to track to (maybe not needed?)
-            */
+            /**
+             * this is going to get interesting - so we have to figure out
+             * if the sprite that we're currently using to chase is going to
+             * slightly hit a wall whenever we're tracking.
+             * 
+             * It's best for us to track the *center* of a sprite rather than any
+             * particular x or y, this means that pieces of a sprite may end up in
+             * a wall and start continuously colliding with no chance of escape
+             * 
+             * we have to add some sort of behavior that predicts collisions and
+             * preemptively adds a velocity so that our sprite can maneuver around
+             * it.
+             */
 
             const fSpriteHitbox = (sprite as any)['_hitbox'] as game.Hitbox
 
