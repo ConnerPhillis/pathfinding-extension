@@ -7,6 +7,9 @@ namespace sprites {
     //% weight=100
     export function spriteTrackTargetSprite(sprite: Sprite, targetSprite: Sprite, speed: number) {
 
+        if (sprite === targetSprite)
+            return
+
         const scale = 4;
 
         // do 250 for now, if needed we can generify
@@ -25,43 +28,48 @@ namespace sprites {
             * Formula should be pretty easy
             * (left + right) / 2 = center x
             * (top + bottom) / 2 = center y
-            * ((center x) >> 4) + 8 = midpoint of a tile to track to
+            * ((center x) >> 4) + 8 = midpoint of a tile to track to (maybe not needed?)
             */
 
-            const followSpriteTileX = ((sprite.left + sprite.right) / 2) >> scale
-            const followSpriteTileY = ((sprite.top + sprite.bottom) / 2) >> scale
+            const fSpriteHitbox = (sprite as any)['_hitbox'] as game.Hitbox
 
-            console.log('FollowX: ' + followSpriteTileX)
-            console.log('FollowY: ' + followSpriteTileY)
+            const fLeft = Fx.toInt(fSpriteHitbox.left)
+            const fRight = Fx.toInt(fSpriteHitbox.right)
+            const fTop = Fx.toInt(fSpriteHitbox.top)
+            const fBottom = Fx.toInt(fSpriteHitbox.bottom)
 
-            // was x & y
-            // const followSpriteTileX = sprite.left >> 4;
-            // const followSpriteTileY = sprite.top >> 4;
+            const fTileX = ((fLeft + fRight) / 2) >> scale;
+            const fTileY = ((fTop + fBottom) / 2) >> scale;
 
-            const targetSpriteX = ((targetSprite.left + targetSprite.right) / 2) >> scale
-            const targetSpriteY = ((targetSprite.top + targetSprite.bottom) / 2) >> scale
+            // console.log('FollowX: ' + fTileX)
+            // console.log('FollowY: ' + fTileY)
 
-            console.log('targetX: ' + targetSpriteX)
-            console.log('targetY: ' + targetSpriteY)
+            const tSpriteHitbox = (targetSprite as any)['_hitbox'] as game.Hitbox
 
+            const tLeft = Fx.toInt(tSpriteHitbox.left)
+            const tRight = Fx.toInt(tSpriteHitbox.right)
+            const tTop = Fx.toInt(tSpriteHitbox.top)
+            const tBottom = Fx.toInt(tSpriteHitbox.bottom)
 
-            // const targetSpriteX = targetSprite.left >> 4;
-            // const targetSpriteY = targetSprite.top >> 4;
+            const tTileX = ((tLeft + tRight) / 2) >> scale
+            const tTileY = ((tTop + tBottom) / 2) >> scale
 
-            if (followSpriteTileX === targetSpriteX
-                && followSpriteTileY === targetSpriteY)
+            // console.log('targetX: ' + tTileX)
+            // console.log('targetY: ' + tTileY)
+
+            if (fTileX === tTileX && fTileY === tTileY)
                 return
 
             // let's AStar this 💩
             const path = aStar(
                 createGrid(obstacleMap),
                 {
-                    x: followSpriteTileX,
-                    y: followSpriteTileY
+                    x: fTileX,
+                    y: fTileY
                 },
                 {
-                    x: targetSpriteX,
-                    y: targetSpriteY
+                    x: tTileX,
+                    y: tTileY
                 });
 
             // no path to target, freeze follower and return
@@ -76,10 +84,10 @@ namespace sprites {
             // we will either be going north, south, east, or west
             // fortunately the math for that is easy
             const nextTile = path[0];
-            sprite.vx = (nextTile.x - followSpriteTileX) * speed;
-            sprite.vy = (nextTile.y - followSpriteTileY) * speed;
+            sprite.vx = (nextTile.x - fTileX) * speed;
+            sprite.vy = (nextTile.y - fTileY) * speed;
 
-            console.log('intentions set to x: ' + sprite.vx + ' y: ' + sprite.vy)
+            // console.log('intentions set to x: ' + sprite.vx + ' y: ' + sprite.vy)
 
             /*
              * now comes the hard part - we need to figure out if we're about to hit a wall
@@ -87,65 +95,59 @@ namespace sprites {
              */
 
             const correctionSpeed = speed / 4
-
-            console.log('sprite coordinates, top: ' + sprite.top + ' bottom: ' + sprite.bottom + ' left ' + sprite.left + ' right: ' + sprite.right)
             
             // if intention is north
             if (sprite.vy < 0) {
                 // and we're partially in the left tile
-                if (sprite.left >> scale < followSpriteTileX
-                    && isObstacleAtDirection({ x: sprite.left >> scale, y: followSpriteTileY }, Direction.North)) {
-                    console.log('set avoidance x to positive #1')
+                if (fLeft >> scale < fTileX
+                    && isObstacleAtDirection({ x: fLeft >> scale, y: fTileY }, Direction.North))
                     sprite.vx = correctionSpeed
-                }
                 // and we're partially in the right tile
-                if (sprite.right >> scale > followSpriteTileX
-                    && isObstacleAtDirection({ x: sprite.right >> scale, y: followSpriteTileY }, Direction.North))
+                if (fRight >> scale > fTileX
+                    && isObstacleAtDirection({ x: sprite.right >> scale, y: fTileY }, Direction.North))
                     sprite.vx = -correctionSpeed
             }
 
             // if intention is south
             else if (sprite.vy > 0) {
                 // and we're partially in the left tile
-                if (sprite.left >> scale < followSpriteTileX 
-                    && isObstacleAtDirection({x: sprite.left >> scale, y: followSpriteTileY}, Direction.South)) {
-                    console.log('set avoidance x to positive #2')
+                if (fLeft >> scale < fTileX 
+                    && isObstacleAtDirection({x: fLeft >> scale, y: fTileY}, Direction.South))
                     sprite.vx = correctionSpeed
-                }
                     
                 // and we're partially in the right tile
-                if (sprite.right >> scale > followSpriteTileX
-                    && isObstacleAtDirection({x: sprite.right >> scale, y: followSpriteTileY}, Direction.South))
+                if (fRight >> scale > fTileX
+                    && isObstacleAtDirection({x: fRight >> scale, y: fTileY}, Direction.South))
                     sprite.vx = -correctionSpeed
             }
 
             // if intention is east
             else if (sprite.vx > 0) {
+                console.log('calcd: ' + (fBottom >> scale))
+                console.log('stored: ' + fTileY)
                 // and we're partially in the top tile
-                if (sprite.top >> scale < followSpriteTileY
-                    && isObstacleAtDirection({x: followSpriteTileX, y: sprite.top >> scale}, Direction.East))
+                if (fTop >> scale < fTileY
+                    && isObstacleAtDirection({x: fTileX, y: fTop >> scale}, Direction.East))
                     sprite.vy = correctionSpeed
                 // and we're partially in the bottom tile
-                console.log('calcd: ' + (sprite.bottom >> scale))
-                console.log('stored: ' + followSpriteTileY)
-                if (sprite.bottom >> scale > followSpriteTileY
-                    && isObstacleAtDirection({x: followSpriteTileX, y: sprite.bottom >> scale}, Direction.East))
+                if (fBottom >> scale > fTileY
+                    && isObstacleAtDirection({x: fTileX, y: fBottom >> scale}, Direction.East))
                     sprite.vy = -correctionSpeed
             }
 
             // if intention is west
             else if (sprite.vx < 0) {
                 // and we're partially in the top tile
-                if (sprite.top >> scale < followSpriteTileY
-                    && isObstacleAtDirection({ x: followSpriteTileX, y: sprite.top >> scale }, Direction.West))
+                if (fTop >> scale < fTileY
+                    && isObstacleAtDirection({ x: fTileX, y: fTop >> scale }, Direction.West))
                     sprite.vy = correctionSpeed
                 // and we're partially in the bottom tile
-                if (sprite.bottom >> scale > followSpriteTileY
-                    && isObstacleAtDirection({ x: followSpriteTileX, y: sprite.bottom >> scale }, Direction.West))
+                if (fBottom >> scale > fTileY
+                    && isObstacleAtDirection({ x: fTileX, y: fBottom >> scale }, Direction.West))
                     sprite.vy = -correctionSpeed
             }
 
-            console.log('final intentions set to x: ' + sprite.vx + ' y: ' + sprite.vy)
+            // console.log('final intentions set to x: ' + sprite.vx + ' y: ' + sprite.vy)
 
             
         })
